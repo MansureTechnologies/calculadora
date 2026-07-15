@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Custos v3.1 (Corrigida) - Recapy</title>
+    <title>Calculadora de Custos v3.2 (FINAL) - Recapy</title>
     <!-- 1. IMPORTANDO A BIBLIOTECA DO SUPABASE VIA CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -55,7 +55,6 @@
         .toggle-switch { display: flex; background: var(--gray-light); border-radius: var(--radius); padding: 4px; }
         .toggle-switch button { flex: 1; padding: 0.5rem; border: none; background: transparent; cursor: pointer; font-weight: 500; border-radius: 6px; transition: all 0.2s; }
         .toggle-switch button.active { background: var(--white); color: var(--blue); box-shadow: var(--shadow-sm); }
-        /* CORREÇÃO: Aumenta o tamanho do campo de texto e mantém o de número fixo */
         .crud-table input[type="text"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: left; width: 100%; }
         .crud-table input[type="number"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: right; width: 120px; }
         .crud-table .action-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--red); }
@@ -67,7 +66,7 @@
 </head>
 <body>
     <header>
-        <h1>💰 Calculadora Recapy v3.1</h1>
+        <h1>💰 Calculadora Recapy v3.2</h1>
         <!-- TASK 1: GERENCIAMENTO DE CENÁRIOS -->
         <div class="scenario-manager">
             <select id="scenario-select" title="Carregar cenário existente"></select>
@@ -178,40 +177,26 @@
     </div>
 
 <script>
-// 2. INICIALIZANDO O CLIENTE SUPABASE (CORRIGIDO)
+// 2. INICIALIZANDO O CLIENTE SUPABASE
 const SUPABASE_URL = 'https://ywvssacobpwxxugyroaz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3dnNzYWNvYnB3eHh1Z3lyb2F6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NzA2NzQsImV4cCI6MjA3ODA0NjY3NH0.w-2_YwBvRexBRGCdGJgja8yQPXTYV2mcogGmAXQ9gJs';
-// O objeto global 'supabase' é criado pelo CDN. Nós o usamos para criar nosso cliente.
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Objeto de Estado Central
 let state = {};
 
-// Função para gerar um novo estado padrão (para um novo cenário)
+// Função para gerar um novo estado padrão
 const createDefaultState = () => ({
-    id: null,
-    name: "Novo Cenário",
-    total_users: 150,
-    current_view: 'monthly',
-    global_params: {
-        whisper_rate: 0.22,
-        gamma_rate: 0.40,
-        tax_rate: 13.83,
-        stripe_pct: 3.99,
-        stripe_fixed: 0.40,
-    },
+    id: null, name: "Novo Cenário", total_users: 150, current_view: 'monthly',
+    global_params: { whisper_rate: 0.22, gamma_rate: 0.40, tax_rate: 13.83, stripe_pct: 3.99, stripe_fixed: 0.40 },
     plans_config: {
         starter: { name: 'Starter', pct: 40, price: 79, hours: 15, slides: 10 },
         pro: { name: 'Pro', pct: 45, price: 129, hours: 25, slides: 20 },
         business: { name: 'Business', pct: 15, price: 199, hours: 40, slides: 30 },
     },
     fixed_costs: [
-        { name: "Telefone/Internet", value: 400 },
-        { name: "Contador", value: 800 },
-        { name: "Escritório", value: 1610 },
-        { name: "Ferramentas", value: 1200 },
-        { name: "Pró-labore", value: 9000 },
-        { name: "Secretária", value: 4000 },
+        { name: "Telefone/Internet", value: 400 }, { name: "Contador", value: 800 }, { name: "Escritório", value: 1610 },
+        { name: "Ferramentas", value: 1200 }, { name: "Pró-labore", value: 9000 }, { name: "Secretária", value: 4000 },
         { name: "CAC (R$3/usuário)", value: 3, isPerUser: true },
     ],
     variable_costs: {
@@ -227,16 +212,14 @@ const fmtPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent',
 
 // Função de Renderização Principal (atualiza a UI a partir do estado)
 function render() {
-    if (!state.global_params) return; // Proteção para renderização antes do estado ser carregado
+    if (!state.global_params) return;
     
-    // Parâmetros Globais
+    // Parâmetros Globais e Inputs Principais
     document.getElementById('param-whisper-rate').value = state.global_params.whisper_rate;
     document.getElementById('param-gamma-rate').value = state.global_params.gamma_rate;
     document.getElementById('param-tax-rate').value = state.global_params.tax_rate;
     document.getElementById('param-stripe-pct').value = state.global_params.stripe_pct;
     document.getElementById('param-stripe-fixed').value = state.global_params.stripe_fixed;
-
-    // Inputs principais
     document.getElementById('inp-users').value = state.total_users;
     document.getElementById('label-users').textContent = state.total_users;
     
@@ -254,11 +237,8 @@ function render() {
     document.getElementById('btn-monthly').classList.toggle('active', state.current_view === 'monthly');
     document.getElementById('btn-yearly').classList.toggle('active', state.current_view === 'yearly');
 
-    // Renderiza tabelas CRUD
     renderFixedCosts();
     renderVariableCosts();
-
-    // Roda os cálculos e atualiza o dashboard
     calculateAndRenderDashboard();
 }
 
@@ -268,7 +248,7 @@ function renderFixedCosts() {
     state.fixed_costs.forEach((cost, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" class="input-box" style="text-align:left;" value="${cost.name}" data-index="${index}" data-field="name"></td>
+            <td><input type="text" class="input-box" value="${cost.name}" data-index="${index}" data-field="name"></td>
             <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-index="${index}" data-field="value"></td>
             <td class="right"><button class="action-btn" data-index="${index}">&#128465;</button></td>
         `;
@@ -283,30 +263,25 @@ function renderVariableCosts() {
         const plan = state.plans_config[planKey];
         const section = document.createElement('div');
         section.className = 'table-section';
-        
         let tableRows = '';
         state.variable_costs[planKey].forEach((cost, index) => {
             tableRows += `
                 <tr>
-                    <td><input type="text" class="input-box" style="text-align:left;" value="${cost.name}" data-plan="${planKey}" data-index="${index}" data-field="name"></td>
+                    <td><input type="text" class="input-box" value="${cost.name}" data-plan="${planKey}" data-index="${index}" data-field="name"></td>
                     <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-plan="${planKey}" data-index="${index}" data-field="value"></td>
                     <td class="right"><button class="action-btn" data-plan="${planKey}" data-index="${index}">&#128465;</button></td>
                 </tr>
             `;
         });
-
         section.innerHTML = `
             <div class="section-title">📦 Custos Variáveis - ${plan.name}</div>
             <table class="crud-table">
                 <thead><tr><th>Item</th><th class="right">Valor Base (R$)</th><th class="right">Ações</th></tr></thead>
                 <tbody>
-                    <!-- Itens fixos baseados nos params globais -->
                     <tr><td>Groq Whisper</td><td class="right" id="vc-whisper-${planKey}">R$ 0.00</td><td></td></tr>
                     <tr><td>Gamma API</td><td class="right" id="vc-gamma-${planKey}">R$ 0.00</td><td></td></tr>
-                    <!-- Itens CRUD -->
                     ${tableRows}
-                    <!-- Custo de transação -->
-                    <tr style="font-style: italic;"><td >Taxa de Transação (Stripe)</td><td class="right" id="vc-stripe-${planKey}">R$ 0.00</td><td></td></tr>
+                    <tr style="font-style: italic;"><td>Taxa de Transação (Stripe)</td><td class="right" id="vc-stripe-${planKey}">R$ 0.00</td><td></td></tr>
                 </tbody>
             </table>
             <button class="btn btn-outline btn-add-variable-cost" data-plan="${planKey}" style="margin-top: 1rem;">+ Adicionar Custo Variável</button>
@@ -315,40 +290,25 @@ function renderVariableCosts() {
     }
 }
 
-// Função de Cálculo e Atualização do Dashboard
 function calculateAndRenderDashboard() {
     const multiplier = state.current_view === 'yearly' ? 12 : 1;
-    let totalRevenue = 0;
-    let totalVariableCost = 0;
-
-    const totalFixedCostValue = state.fixed_costs.reduce((acc, cost) => {
-        const value = cost.isPerUser ? cost.value * state.total_users : cost.value;
-        return acc + value;
-    }, 0) * multiplier;
+    let totalRevenue = 0, totalVariableCost = 0;
+    const totalFixedCostValue = state.fixed_costs.reduce((acc, cost) => acc + (cost.isPerUser ? cost.value * state.total_users : cost.value), 0) * multiplier;
     
     for (const planKey in state.plans_config) {
         const plan = state.plans_config[planKey];
         const usersInPlan = state.total_users * (plan.pct / 100);
-
-        // Receita
         let planPrice = plan.price;
-        if(state.current_view === 'yearly') {
-            planPrice *= 12 * 0.90; // Aplica 10% de desconto no anual
-        }
-        const revenueFromPlan = usersInPlan * planPrice;
-        totalRevenue += revenueFromPlan;
-
-        // Custos Variáveis
+        if(state.current_view === 'yearly') planPrice *= 12 * 0.90;
+        totalRevenue += usersInPlan * planPrice;
+        
         const whisperCost = plan.hours * state.global_params.whisper_rate;
         const gammaCost = plan.slides * state.global_params.gamma_rate;
         const stripeCost = (plan.price * (state.global_params.stripe_pct / 100)) + state.global_params.stripe_fixed;
-        
         const otherVariableCosts = state.variable_costs[planKey].reduce((acc, cost) => acc + cost.value, 0);
         const costPerUser = whisperCost + gammaCost + stripeCost + otherVariableCosts;
-        
         totalVariableCost += costPerUser * usersInPlan * multiplier;
 
-        // Atualiza a UI da tabela de custos variáveis
         document.getElementById(`vc-whisper-${planKey}`).textContent = fmtCurrency(whisperCost);
         document.getElementById(`vc-gamma-${planKey}`).textContent = fmtCurrency(gammaCost);
         document.getElementById(`vc-stripe-${planKey}`).textContent = fmtCurrency(stripeCost);
@@ -359,7 +319,6 @@ function calculateAndRenderDashboard() {
     const netResult = totalRevenue - totalCosts;
     const profitBeforeFixed = totalRevenue - totalVariableCost - taxCost;
 
-    // Atualiza dashboard
     document.getElementById('val-receita').textContent = fmtCurrency(totalRevenue);
     document.getElementById('sub-receita-detalhe').textContent = `${(state.total_users * (state.plans_config.starter.pct / 100)).toFixed(0)}S | ${(state.total_users * (state.plans_config.pro.pct / 100)).toFixed(0)}P | ${(state.total_users * (state.plans_config.business.pct / 100)).toFixed(0)}B`;
     document.getElementById('val-custos').textContent = fmtCurrency(totalCosts);
@@ -367,7 +326,6 @@ function calculateAndRenderDashboard() {
     document.getElementById('sub-margem').textContent = `Margem: ${totalRevenue > 0 ? fmtPercent(profitBeforeFixed / totalRevenue) : '0.0%'}`;
     document.getElementById('val-liquido').textContent = fmtCurrency(netResult);
     
-    // Atualiza tabela resumo
     document.getElementById('tb-receita').textContent = fmtCurrency(totalRevenue);
     document.getElementById('tb-api').textContent = fmtCurrency(totalVariableCost);
     document.getElementById('tb-api-pct').textContent = totalRevenue > 0 ? fmtPercent(totalVariableCost / totalRevenue) : '0.0%';
@@ -379,14 +337,9 @@ function calculateAndRenderDashboard() {
     document.getElementById('tb-liquido-pct').textContent = totalRevenue > 0 ? fmtPercent(netResult / totalRevenue) : '0.0%';
 }
 
-// Funções de interação com o Supabase
 async function loadScenarios() {
     const { data, error } = await supabaseClient.from('calculator_scenarios').select('id, name');
-    if (error) {
-        console.error('Erro ao carregar cenários:', error);
-        alert('Falha ao carregar cenários do banco de dados.');
-        return;
-    }
+    if (error) { console.error('Erro:', error); alert('Falha ao carregar cenários.'); return; }
     const select = document.getElementById('scenario-select');
     select.innerHTML = '<option value="">Selecione um cenário...</option>';
     data.forEach(scenario => {
@@ -400,163 +353,81 @@ async function loadScenarios() {
 async function handleLoadScenario() {
     const id = document.getElementById('scenario-select').value;
     if (!id) return;
-
     const { data, error } = await supabaseClient.from('calculator_scenarios').select('*').eq('id', id).single();
-    if (error) {
-        alert('Erro ao carregar o cenário selecionado.');
-        return;
-    }
+    if (error) { alert('Erro ao carregar o cenário.'); return; }
     
-    // Atualiza o estado com os dados do banco
-    state.id = data.id;
-    state.name = data.name;
-    state.total_users = data.total_users;
-    state.global_params = data.global_params;
-    state.plans_config = data.plans_config;
-    state.fixed_costs = data.fixed_costs;
-    state.variable_costs = data.variable_costs;
-    state.current_view = 'monthly'; // sempre carrega na visão mensal
-
+    Object.assign(state, data); // Mescla os dados do banco no estado
+    state.current_view = 'monthly'; // Reseta a visão para mensal
     document.getElementById('inp-scenario-name').value = data.name;
-
     render();
 }
 
 async function handleSaveScenario() {
     const name = document.getElementById('inp-scenario-name').value;
-    if (!name) {
-        alert('Por favor, dê um nome ao cenário.');
-        return;
-    }
-
+    if (!name) { alert('Por favor, dê um nome ao cenário.'); return; }
     const scenarioData = {
-        name: name,
-        total_users: state.total_users,
-        global_params: state.global_params,
-        plans_config: state.plans_config,
-        fixed_costs: state.fixed_costs,
-        variable_costs: state.variable_costs
+        name, total_users: state.total_users, global_params: state.global_params,
+        plans_config: state.plans_config, fixed_costs: state.fixed_costs, variable_costs: state.variable_costs
     };
-
-    // Se o estado já tem um ID, é um UPDATE, senão é um INSERT
-    let response;
-    if (state.id && document.getElementById('scenario-select').value === state.id) {
-        response = await supabaseClient.from('calculator_scenarios').update(scenarioData).eq('id', state.id);
-    } else {
-        response = await supabaseClient.from('calculator_scenarios').insert([scenarioData]).select();
-    }
+    let response = (state.id && document.getElementById('scenario-select').value === state.id)
+        ? await supabaseClient.from('calculator_scenarios').update(scenarioData).eq('id', state.id)
+        : await supabaseClient.from('calculator_scenarios').insert([scenarioData]).select();
     
-    if (response.error) {
-        alert('Erro ao salvar o cenário: ' + response.error.message);
-    } else {
+    if (response.error) { alert('Erro ao salvar: ' + response.error.message); }
+    else {
         alert('Cenário salvo com sucesso!');
-        if (response.data && response.data.length > 0) {
-           state.id = response.data[0].id;
-        }
+        if (response.data?.[0]) state.id = response.data[0].id;
         loadScenarios();
     }
 }
 
-
 function copyToClipboard() {
     const view = state.current_view === 'monthly' ? 'MENSAL' : 'ANUAL';
     const name = document.getElementById('inp-scenario-name').value || 'Cenário Atual';
-    
-    const text = `
-📊 RESUMO RECAPY - VISÃO ${view} | Cenário: ${name} 📊
-Usuários Ativos: ${state.total_users}
-Receita Bruta: ${document.getElementById('val-receita').textContent}
-Custos Totais: ${document.getElementById('val-custos').textContent}
-Resultado Líquido: ${document.getElementById('val-liquido').textContent}
-    `.trim();
-            
+    const text = `📊 RESUMO RECAPY - VISÃO ${view} | Cenário: ${name} 📊
+    Usuários Ativos: ${state.total_users}
+    Receita Bruta: ${document.getElementById('val-receita').textContent}
+    Custos Totais: ${document.getElementById('val-custos').textContent}
+    Resultado Líquido: ${document.getElementById('val-liquido').textContent}`.trim();
     navigator.clipboard.writeText(text).then(() => alert('Resumo copiado!'));
 }
 
-
-// Adicionando Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     state = createDefaultState();
     loadScenarios();
     render();
 
-    // Listener para todos os inputs (VERSÃO FINAL CORRIGIDA)
     document.body.addEventListener('input', (e) => {
         const id = e.target.id;
         const value = e.target.type === 'range' || e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
 
-        // Atualiza o estado central (state) com base no input alterado
-        
-        // Inputs principais (sliders)
-        if (id === 'inp-users') {
-            state.total_users = value;
-            document.getElementById('label-users').textContent = value; // Atualiza o label em tempo real
-        }
-        if (id.startsWith('pct-')) {
-            const planKey = id.replace('pct-', '');
-            state.plans_config[planKey].pct = value;
-            document.getElementById(`label-pct-${planKey}`).textContent = `${value}%`; // Atualiza o label
-        }
-        
-        // Parâmetros globais
-        if (id.startsWith('param-')) {
-            const paramKey = id.replace('param-', '').replace(/-/g, '_');
-            state.global_params[paramKey] = value;
-        }
-        
-        // Configs dos planos (tabela de preços, horas, slides)
-        if (id.startsWith('price-') || id.startsWith('hours-') || id.startsWith('slides-')) {
-            const [field, planKey] = id.split('-');
-            state.plans_config[planKey][field] = value;
-        }
-
-        // Tabelas CRUD (Custo Fixo e Variável)
+        if (id === 'inp-users') { state.total_users = value; document.getElementById('label-users').textContent = value; }
+        if (id.startsWith('pct-')) { const k = id.replace('pct-', ''); state.plans_config[k].pct = value; document.getElementById(`label-pct-${k}`).textContent = `${value}%`; }
+        if (id.startsWith('param-')) { state.global_params[id.replace('param-', '').replace(/-/g, '_')] = value; }
+        if (id.startsWith('price-') || id.startsWith('hours-') || id.startsWith('slides-')) { const [f, k] = id.split('-'); state.plans_config[k][f] = value; }
         if (e.target.dataset.index) {
             const { index, field, plan } = e.target.dataset;
-            if (plan) { // Custo Variável
-                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value);
-            } else { // Custo Fixo
-                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value);
-            }
+            const targetArray = plan ? state.variable_costs[plan] : state.fixed_costs;
+            targetArray[index][field] = field === 'name' ? value : parseFloat(value);
         }
-        
-        // Após qualquer alteração de input, recalcula e atualiza APENAS o dashboard e o resumo.
-        // Isso evita o redesenho dos inputs, corrigindo o bug de perda de foco.
         calculateAndRenderDashboard();
     });
 
-    // Listener para botões e cliques
     document.body.addEventListener('click', (e) => {
-        // Toggle view
-        if(e.target.id === 'btn-monthly') state.current_view = 'monthly';
-        if(e.target.id === 'btn-yearly') state.current_view = 'yearly';
-
-        // Botões de Ação
-        if(e.target.id === 'btn-load') handleLoadScenario();
-        if(e.target.id === 'btn-save') handleSaveScenario();
-
-        // Botões CRUD Add
-        if(e.target.id === 'btn-add-fixed-cost') {
-            state.fixed_costs.push({ name: 'Novo Custo', value: 0 });
-        }
-        if(e.target.classList.contains('btn-add-variable-cost')) {
-            const plan = e.target.dataset.plan;
-            state.variable_costs[plan].push({ name: 'Novo Custo Var.', value: 0 });
-        }
-        
-        // Botões CRUD Delete
-        if(e.target.classList.contains('action-btn')) {
+        const id = e.target.id;
+        if (id === 'btn-monthly' || id === 'btn-yearly') { state.current_view = id.replace('btn-', ''); render(); }
+        if (id === 'btn-load') handleLoadScenario();
+        if (id === 'btn-save') handleSaveScenario();
+        if (id === 'btn-add-fixed-cost') { state.fixed_costs.push({ name: 'Novo Custo', value: 0 }); render(); }
+        if (e.target.classList.contains('btn-add-variable-cost')) { const p = e.target.dataset.plan; state.variable_costs[p].push({ name: 'Novo Custo Var.', value: 0 }); render(); }
+        if (e.target.classList.contains('action-btn')) {
             const { index, plan } = e.target.dataset;
-            if (confirm('Tem certeza que deseja excluir este item?')) {
-                if(plan) {
-                    state.variable_costs[plan].splice(index, 1);
-                } else {
-                    state.fixed_costs.splice(index, 1);
-                }
+            if (confirm('Tem certeza?')) {
+                const targetArray = plan ? state.variable_costs[plan] : state.fixed_costs;
+                targetArray.splice(index, 1);
+                render();
             }
         }
-        
-        render();
     });
 });
 </script>
