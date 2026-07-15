@@ -480,41 +480,49 @@ document.addEventListener('DOMContentLoaded', () => {
     loadScenarios();
     render();
 
-    // Listener para todos os inputs (CORRIGIDO)
+    // Listener para todos os inputs (VERSÃO FINAL CORRIGIDA)
     document.body.addEventListener('input', (e) => {
         const id = e.target.id;
-        const value = e.target.type === 'range' || e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
-        let fullRender = true; // Variável de controle
+        const value = e.target.type === 'range' || e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
 
-        // CRUD tables - Apenas atualiza o estado e os cálculos, sem redesenhar a tabela inteira
-        if (e.target.dataset.index) {
-            fullRender = false; // Desativa o redesenho completo
-            const { index, field, plan } = e.target.dataset;
-            if (plan) { // Variável
-                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value);
-            } else { // Fixo
-                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value);
-            }
-            calculateAndRenderDashboard(); // CORREÇÃO: Chama apenas a função de cálculo
+        // Atualiza o estado central (state) com base no input alterado
+        
+        // Inputs principais (sliders)
+        if (id === 'inp-users') {
+            state.total_users = value;
+            document.getElementById('label-users').textContent = value; // Atualiza o label em tempo real
         }
-
-        // Inputs principais
-        if (id === 'inp-users') state.total_users = value;
-        if (id.startsWith('pct-')) state.plans_config[id.replace('pct-', '')].pct = value;
+        if (id.startsWith('pct-')) {
+            const planKey = id.replace('pct-', '');
+            state.plans_config[planKey].pct = value;
+            document.getElementById(`label-pct-${planKey}`).textContent = `${value}%`; // Atualiza o label
+        }
         
         // Parâmetros globais
-        if (id.startsWith('param-')) state.global_params[id.replace('param-', '').replace(/-/g, '_')] = value;
+        if (id.startsWith('param-')) {
+            const paramKey = id.replace('param-', '').replace(/-/g, '_');
+            state.global_params[paramKey] = value;
+        }
         
-        // Configs dos planos
+        // Configs dos planos (tabela de preços, horas, slides)
         if (id.startsWith('price-') || id.startsWith('hours-') || id.startsWith('slides-')) {
             const [field, planKey] = id.split('-');
             state.plans_config[planKey][field] = value;
         }
-        
-        // CORREÇÃO: Só executa o render() completo se não for um input da tabela CRUD
-        if (fullRender) {
-            render();
+
+        // Tabelas CRUD (Custo Fixo e Variável)
+        if (e.target.dataset.index) {
+            const { index, field, plan } = e.target.dataset;
+            if (plan) { // Custo Variável
+                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value);
+            } else { // Custo Fixo
+                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value);
+            }
         }
+        
+        // Após qualquer alteração de input, recalcula e atualiza APENAS o dashboard e o resumo.
+        // Isso evita o redesenho dos inputs, corrigindo o bug de perda de foco.
+        calculateAndRenderDashboard();
     });
 
     // Listener para botões e cliques
