@@ -55,7 +55,9 @@
         .toggle-switch { display: flex; background: var(--gray-light); border-radius: var(--radius); padding: 4px; }
         .toggle-switch button { flex: 1; padding: 0.5rem; border: none; background: transparent; cursor: pointer; font-weight: 500; border-radius: 6px; transition: all 0.2s; }
         .toggle-switch button.active { background: var(--white); color: var(--blue); box-shadow: var(--shadow-sm); }
-        .crud-table input { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: right; width: 100px; }
+        /* CORREÇÃO: Aumenta o tamanho do campo de texto e mantém o de número fixo */
+        .crud-table input[type="text"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: left; width: 100%; }
+        .crud-table input[type="number"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: right; width: 120px; }
         .crud-table .action-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--red); }
         @media (max-width: 1200px) {
             header { flex-direction: column; align-items: flex-start; }
@@ -478,10 +480,23 @@ document.addEventListener('DOMContentLoaded', () => {
     loadScenarios();
     render();
 
-    // Listener para todos os inputs
+    // Listener para todos os inputs (CORRIGIDO)
     document.body.addEventListener('input', (e) => {
         const id = e.target.id;
         const value = e.target.type === 'range' || e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+        let fullRender = true; // Variável de controle
+
+        // CRUD tables - Apenas atualiza o estado e os cálculos, sem redesenhar a tabela inteira
+        if (e.target.dataset.index) {
+            fullRender = false; // Desativa o redesenho completo
+            const { index, field, plan } = e.target.dataset;
+            if (plan) { // Variável
+                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value);
+            } else { // Fixo
+                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value);
+            }
+            calculateAndRenderDashboard(); // CORREÇÃO: Chama apenas a função de cálculo
+        }
 
         // Inputs principais
         if (id === 'inp-users') state.total_users = value;
@@ -495,18 +510,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const [field, planKey] = id.split('-');
             state.plans_config[planKey][field] = value;
         }
-
-        // CRUD tables
-        if(e.target.dataset.index) {
-            const { index, field, plan } = e.target.dataset;
-            if(plan) { // Variável
-                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value);
-            } else { // Fixo
-                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value);
-            }
-        }
         
-        render();
+        // CORREÇÃO: Só executa o render() completo se não for um input da tabela CRUD
+        if (fullRender) {
+            render();
+        }
     });
 
     // Listener para botões e cliques
