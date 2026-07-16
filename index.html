@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Custos v3.1 (Corrigida) - Recapy</title>
+    <title>Calculadora de Custos v3.1 - Recapy</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         :root {
             --green: #10b981; --green-light: #d1fae5; --red: #ef4444; --red-light: #fee2e2;
             --blue: #3b82f6; --gray: #6b7280; --gray-light: #e5e7eb; --bg: #f9fafb;
             --text-main: #111827; --text-muted: #4b5563; --white: #ffffff;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
             --radius: 8px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.5; padding-bottom: 3rem; }
-        header { background-color: var(--white); border-bottom: 1px solid var(--gray-light); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 1rem;}
+        header { background-color: var(--white); border-bottom: 1px solid var(--gray-light); padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 1rem; }
         h1 { font-size: 24px; font-weight: 600; color: var(--text-main); }
         .btn { padding: 0.5rem 1rem; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
         .btn-outline { background: transparent; border: 1px solid var(--gray-light); color: var(--text-muted); }
@@ -29,24 +28,38 @@
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 380px 1fr; gap: 2rem; }
         .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
         .card { background: var(--white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-light); }
-        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text-main); }
         .input-group { margin-bottom: 1rem; }
         .input-group:last-child { margin-bottom: 0; }
         .label-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500; }
         input[type="range"] { width: 100%; accent-color: var(--blue); cursor: pointer; }
         .input-box { width: 100%; padding: 0.5rem; border: 1px solid var(--gray-light); border-radius: 4px; font-size: 14px; text-align: right; font-family: monospace; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
         .main-content { display: flex; flex-direction: column; gap: 2rem; }
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+
+        /* ── DASH CARD com breakdown ── */
         .dash-card { background: var(--white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-light); }
+        .dash-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .dash-title { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem; }
         .dash-value { font-size: 28px; font-weight: 700; font-family: monospace; letter-spacing: -0.5px; }
         .text-green { color: var(--green); } .text-red { color: var(--red); } .text-blue { color: var(--blue); }
         .dash-sub { font-size: 12px; color: var(--text-muted); margin-top: 0.5rem; }
+        .btn-breakdown { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray); padding: 2px 4px; border-radius: 4px; transition: all 0.2s; flex-shrink: 0; }
+        .btn-breakdown:hover { background: var(--bg); color: var(--blue); }
+        .breakdown-panel { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--gray-light); font-size: 13px; color: var(--text-muted); }
+        .breakdown-panel.open { display: block; }
+        .breakdown-line { display: flex; justify-content: space-between; gap: 1rem; padding: 3px 0; }
+        .breakdown-line.total { font-weight: 600; color: var(--text-main); border-top: 1px solid var(--gray-light); margin-top: 4px; padding-top: 6px; }
+        .breakdown-line .formula { font-family: monospace; color: var(--blue); font-size: 12px; }
+
         .table-section { background: var(--white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-light); }
         .section-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text-main); }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         table th { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--gray-light); font-weight: 600; color: var(--text-muted); background: var(--bg); }
-        table td { padding: 0.75rem; border-bottom: 1px solid var(--gray-light); }
+        table td { padding: 0.75rem; border-bottom: 1px solid var(--gray-light); vertical-align: middle; }
         .right { text-align: right; }
         .scenario-manager { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
         .scenario-manager select, .scenario-manager input { padding: 0.5rem; border: 1px solid var(--gray-light); border-radius: var(--radius); }
@@ -55,112 +68,160 @@
         .toggle-switch button.active { background: var(--white); color: var(--blue); box-shadow: var(--shadow-sm); }
         .crud-table input[type="text"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: left; width: 100%; }
         .crud-table input[type="number"] { border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px; font-family: monospace; text-align: right; width: 120px; }
-        /* Remove spinner dos inputs numéricos para economizar espaço */
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
         .crud-table .action-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--red); }
+
+        /* ── TOOLTIP ── */
+        .tooltip-wrap { position: relative; display: inline-flex; align-items: center; gap: 6px; width: 100%; }
+        .tooltip-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--gray-light); color: var(--gray); font-size: 10px; font-weight: 700; cursor: help; flex-shrink: 0; user-select: none; }
+        .tooltip-icon:hover { background: var(--blue); color: var(--white); }
+        .tooltip-box { visibility: hidden; opacity: 0; position: absolute; left: 24px; top: 50%; transform: translateY(-50%); background: #1f2937; color: #fff; font-size: 12px; padding: 8px 12px; border-radius: 6px; width: 260px; z-index: 100; pointer-events: none; transition: opacity 0.15s; line-height: 1.5; }
+        .tooltip-box .tip-formula { font-family: monospace; color: #6ee7b7; display: block; margin-top: 4px; font-size: 11px; }
+        .tooltip-icon:hover + .tooltip-box,
+        .tooltip-wrap:hover .tooltip-box { visibility: visible; opacity: 1; }
+
         @media (max-width: 1200px) { header { flex-direction: column; align-items: flex-start; } }
         @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <header>
-        <h1>💰 Calculadora Recapy v3.1</h1>
-        <div class="scenario-manager">
-            <select id="scenario-select" title="Carregar cenário existente"></select>
-            <button class="btn btn-primary" id="btn-load">Carregar</button>
-            <input type="text" id="inp-scenario-name" placeholder="Nome do novo cenário...">
-            <button class="btn btn-green" id="btn-save">Salvar Cenário</button>
-            <button class="btn btn-outline" onclick="copyToClipboard()">📋 Copiar Resumo</button>
-        </div>
-    </header>
+<header>
+    <h1>💰 Calculadora Recapy v3.1</h1>
+    <div class="scenario-manager">
+        <select id="scenario-select" title="Carregar cenário existente"></select>
+        <button class="btn btn-primary" id="btn-load">Carregar</button>
+        <input type="text" id="inp-scenario-name" placeholder="Nome do novo cenário...">
+        <button class="btn btn-green" id="btn-save">Salvar Cenário</button>
+        <button class="btn btn-outline" onclick="copyToClipboard()">📋 Copiar Resumo</button>
+    </div>
+</header>
 
-    <div class="container">
-        <div class="sidebar">
-            <div class="card">
-                <div class="card-title">👥 Parâmetros Principais</div>
-                <div class="input-group">
-                    <div class="label-row"><span>Total de usuários</span><span id="label-users" style="font-weight: 700; color: var(--blue);">150</span></div>
-                    <input type="range" id="inp-users" min="1" max="1000" value="150" step="1">
-                </div>
-                <div class="input-group">
-                    <div class="label-row"><span>Plano Starter</span><span id="label-pct-starter" style="font-weight: 700;">40%</span></div>
-                    <input type="range" id="pct-starter" min="0" max="100" value="40">
-                </div>
-                <div class="input-group">
-                    <div class="label-row"><span>Plano Pro</span><span id="label-pct-pro" style="font-weight: 700;">45%</span></div>
-                    <input type="range" id="pct-pro" min="0" max="100" value="45">
-                </div>
-                <div class="input-group">
-                    <div class="label-row"><span>Plano Business</span><span id="label-pct-business" style="font-weight: 700;">15%</span></div>
-                    <input type="range" id="pct-business" min="0" max="100" value="15">
-                </div>
+<div class="container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="card">
+            <div class="card-title">👥 Parâmetros Principais</div>
+            <div class="input-group">
+                <div class="label-row"><span>Total de usuários</span><span id="label-users" style="font-weight:700;color:var(--blue);">150</span></div>
+                <input type="range" id="inp-users" min="1" max="1000" value="150" step="1">
             </div>
-
-            <div class="card">
-                <div class="card-title">⚙️ Parâmetros Globais Editáveis</div>
-                <div class="input-group">
-                    <div class="label-row"><span>Custo/hora Whisper (R$)</span><input type="number" step="0.001" class="input-box" id="param-whisper-rate"></div>
-                    <div class="label-row"><span>Custo/slide Gamma (R$)</span><input type="number" step="0.001" class="input-box" id="param-gamma-rate"></div>
-                    <div class="label-row"><span>% Impostos</span><input type="number" step="0.01" class="input-box" id="param-tax-rate"></div>
-                    <div class="label-row"><span>% Taxa Stripe</span><input type="number" step="0.01" class="input-box" id="param-stripe-pct"></div>
-                    <div class="label-row"><span>Taxa Fixa Stripe (R$)</span><input type="number" step="0.01" class="input-box" id="param-stripe-fixed"></div>
-                </div>
+            <div class="input-group">
+                <div class="label-row"><span>Plano Starter</span><span id="label-pct-starter" style="font-weight:700;">40%</span></div>
+                <input type="range" id="pct-starter" min="0" max="100" value="40">
             </div>
-
-            <div class="card">
-                <div class="card-title">📊 Configuração dos Planos</div>
-                <table style="table-layout: fixed; width: 100%;">
-                    <thead><tr><th style="width:20%;">Plano</th><th class="right" style="width:27%;">Preço (R$)</th><th class="right" style="width:26%;">Horas/mês</th><th class="right" style="width:27%;">Slides/mês</th></tr></thead>
-                    <tbody>
-                        <tr><td>Starter</td><td><input type="number" class="input-box" id="price-starter" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-starter" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-starter" style="width:100%;"></td></tr>
-                        <tr><td>Pro</td><td><input type="number" class="input-box" id="price-pro" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-pro" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-pro" style="width:100%;"></td></tr>
-                        <tr><td>Business</td><td><input type="number" class="input-box" id="price-business" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-business" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-business" style="width:100%;"></td></tr>
-                    </tbody>
-                </table>
+            <div class="input-group">
+                <div class="label-row"><span>Plano Pro</span><span id="label-pct-pro" style="font-weight:700;">45%</span></div>
+                <input type="range" id="pct-pro" min="0" max="100" value="45">
+            </div>
+            <div class="input-group">
+                <div class="label-row"><span>Plano Business</span><span id="label-pct-business" style="font-weight:700;">15%</span></div>
+                <input type="range" id="pct-business" min="0" max="100" value="15">
             </div>
         </div>
 
-        <div class="main-content">
-            <div class="toggle-switch">
-                <button id="btn-monthly" class="active">Visão Mensal</button>
-                <button id="btn-yearly">Visão Anual</button>
+        <div class="card">
+            <div class="card-title">⚙️ Parâmetros Globais Editáveis</div>
+            <div class="input-group">
+                <div class="label-row"><span>Custo/hora Whisper (R$)</span><input type="number" step="0.001" class="input-box" id="param-whisper-rate"></div>
+                <div class="label-row"><span>Custo/slide Gamma (R$)</span><input type="number" step="0.001" class="input-box" id="param-gamma-rate"></div>
+                <div class="label-row"><span>% Impostos</span><input type="number" step="0.01" class="input-box" id="param-tax-rate"></div>
+                <div class="label-row"><span>% Taxa Stripe</span><input type="number" step="0.01" class="input-box" id="param-stripe-pct"></div>
+                <div class="label-row"><span>Taxa Fixa Stripe (R$)</span><input type="number" step="0.01" class="input-box" id="param-stripe-fixed"></div>
             </div>
+        </div>
 
-            <div class="dashboard-grid">
-                <div class="dash-card"><div class="dash-title">💰 Receita Bruta</div><div class="dash-value" id="val-receita">R$ 0</div><div class="dash-sub" id="sub-receita-detalhe"></div></div>
-                <div class="dash-card"><div class="dash-title">📉 Custos Totais</div><div class="dash-value text-red" id="val-custos">R$ 0</div><div class="dash-sub">Fixo + Variável + Imposto</div></div>
-                <div class="dash-card"><div class="dash-title">📈 Lucro Bruto</div><div class="dash-value text-green" id="val-lucro-bruto">R$ 0</div><div class="dash-sub" id="sub-margem"></div></div>
-                <div class="dash-card"><div class="dash-title">🎯 Resultado Líquido</div><div class="dash-value text-blue" id="val-liquido">R$ 0</div><div class="dash-sub">Após Pró-labore/Custos Fixos</div></div>
-            </div>
-
-            <div class="table-section">
-                <div class="section-title">🏢 Custos Fixos</div>
-                <table id="table-fixed-costs" class="crud-table">
-                    <thead><tr><th>Item</th><th class="right">Valor (R$)</th><th class="right">Ações</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-                <button id="btn-add-fixed-cost" class="btn btn-outline" style="margin-top: 1rem;">+ Adicionar Custo Fixo</button>
-            </div>
-            
-            <div id="variable-costs-container"></div>
-
-            <div class="table-section">
-                <div class="section-title">📋 Resumo Financeiro</div>
-                <table>
-                    <thead><tr><th>Item</th><th class="right">Valor</th><th class="right">% Receita</th></tr></thead>
-                    <tbody>
-                        <tr><td style="font-weight: 600;">Receita Bruta</td><td class="right" id="tb-receita" style="font-weight: 600;">R$ 0</td><td class="right" style="font-weight: 600;">100%</td></tr>
-                        <tr><td>(-) Custos Variáveis Totais</td><td class="right" id="tb-api">R$ 0</td><td class="right" id="tb-api-pct">0%</td></tr>
-                        <tr><td>(-) Custos Fixos Totais</td><td class="right" id="tb-fixo">R$ 0</td><td class="right" id="tb-fixo-pct">0%</td></tr>
-                        <tr><td>(-) Impostos</td><td class="right" id="tb-impostos">R$ 0</td><td class="right" id="tb-impostos-pct">0%</td></tr>
-                        <tr style="border-top: 1px solid var(--gray-light);"><td style="font-weight: 600; color: var(--blue);">= Resultado Líquido</td><td class="right" id="tb-liquido" style="font-weight: 600;">R$ 0</td><td class="right" id="tb-liquido-pct">0%</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="card">
+            <div class="card-title">📊 Configuração dos Planos</div>
+            <table style="table-layout:fixed;width:100%;">
+                <thead><tr><th style="width:20%;">Plano</th><th class="right" style="width:27%;">Preço (R$)</th><th class="right" style="width:26%;">Horas/mês</th><th class="right" style="width:27%;">Slides/mês</th></tr></thead>
+                <tbody>
+                    <tr><td>Starter</td><td><input type="number" class="input-box" id="price-starter" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-starter" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-starter" style="width:100%;"></td></tr>
+                    <tr><td>Pro</td><td><input type="number" class="input-box" id="price-pro" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-pro" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-pro" style="width:100%;"></td></tr>
+                    <tr><td>Business</td><td><input type="number" class="input-box" id="price-business" style="width:100%;"></td><td><input type="number" class="input-box" id="hours-business" style="width:100%;"></td><td><input type="number" class="input-box" id="slides-business" style="width:100%;"></td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+        <div class="toggle-switch">
+            <button id="btn-monthly" class="active">Visão Mensal</button>
+            <button id="btn-yearly">Visão Anual</button>
+        </div>
+
+        <!-- DASHBOARD CARDS -->
+        <div class="dashboard-grid">
+            <!-- Receita Bruta -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div class="dash-title">💰 Receita Bruta</div>
+                    <button class="btn-breakdown" data-target="bd-receita" title="Ver cálculo">▾</button>
+                </div>
+                <div class="dash-value" id="val-receita">R$ 0</div>
+                <div class="dash-sub" id="sub-receita-detalhe"></div>
+                <div class="breakdown-panel" id="bd-receita"></div>
+            </div>
+            <!-- Custos Totais -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div class="dash-title">📉 Custos Totais</div>
+                    <button class="btn-breakdown" data-target="bd-custos" title="Ver cálculo">▾</button>
+                </div>
+                <div class="dash-value text-red" id="val-custos">R$ 0</div>
+                <div class="dash-sub">Fixo + Variável + Imposto</div>
+                <div class="breakdown-panel" id="bd-custos"></div>
+            </div>
+            <!-- Lucro Bruto -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div class="dash-title">📈 Lucro Bruto</div>
+                    <button class="btn-breakdown" data-target="bd-lucro" title="Ver cálculo">▾</button>
+                </div>
+                <div class="dash-value text-green" id="val-lucro-bruto">R$ 0</div>
+                <div class="dash-sub" id="sub-margem"></div>
+                <div class="breakdown-panel" id="bd-lucro"></div>
+            </div>
+            <!-- Resultado Líquido -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div class="dash-title">🎯 Resultado Líquido</div>
+                    <button class="btn-breakdown" data-target="bd-liquido" title="Ver cálculo">▾</button>
+                </div>
+                <div class="dash-value text-blue" id="val-liquido">R$ 0</div>
+                <div class="dash-sub">Após todos os custos</div>
+                <div class="breakdown-panel" id="bd-liquido"></div>
+            </div>
+        </div>
+
+        <!-- CUSTOS FIXOS -->
+        <div class="table-section">
+            <div class="section-title">🏢 Custos Fixos</div>
+            <table id="table-fixed-costs" class="crud-table">
+                <thead><tr><th>Item</th><th class="right">Valor (R$)</th><th class="right">Ações</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button id="btn-add-fixed-cost" class="btn btn-outline" style="margin-top:1rem;">+ Adicionar Custo Fixo</button>
+        </div>
+
+        <!-- CUSTOS VARIÁVEIS -->
+        <div id="variable-costs-container"></div>
+
+        <!-- RESUMO FINANCEIRO -->
+        <div class="table-section">
+            <div class="section-title">📋 Resumo Financeiro</div>
+            <table>
+                <thead><tr><th>Item</th><th class="right">Valor</th><th class="right">% Receita</th></tr></thead>
+                <tbody>
+                    <tr><td style="font-weight:600;">Receita Bruta</td><td class="right" id="tb-receita" style="font-weight:600;">R$ 0</td><td class="right" style="font-weight:600;">100%</td></tr>
+                    <tr><td>(-) Custos Variáveis Totais</td><td class="right" id="tb-api">R$ 0</td><td class="right" id="tb-api-pct">0%</td></tr>
+                    <tr><td>(-) Custos Fixos Totais</td><td class="right" id="tb-fixo">R$ 0</td><td class="right" id="tb-fixo-pct">0%</td></tr>
+                    <tr><td>(-) Impostos</td><td class="right" id="tb-impostos">R$ 0</td><td class="right" id="tb-impostos-pct">0%</td></tr>
+                    <tr style="border-top:1px solid var(--gray-light);"><td style="font-weight:600;color:var(--blue);">= Resultado Líquido</td><td class="right" id="tb-liquido" style="font-weight:600;">R$ 0</td><td class="right" id="tb-liquido-pct">0%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://ywvssacobpwxxugyroaz.supabase.co';
@@ -174,13 +235,7 @@ const createDefaultState = () => ({
     name: "Novo Cenário",
     total_users: 150,
     current_view: 'monthly',
-    global_params: {
-        whisper_rate: 0.22,
-        gamma_rate: 0.40,
-        tax_rate: 13.83,
-        stripe_pct: 3.99,
-        stripe_fixed: 0.40,
-    },
+    global_params: { whisper_rate: 0.22, gamma_rate: 0.40, tax_rate: 13.83, stripe_pct: 3.99, stripe_fixed: 0.40 },
     plans_config: {
         starter:  { name: 'Starter',  pct: 40, price: 79,  hours: 15, slides: 10 },
         pro:      { name: 'Pro',      pct: 45, price: 129, hours: 25, slides: 20 },
@@ -202,34 +257,51 @@ const createDefaultState = () => ({
     }
 });
 
-const fmtCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-const fmtPercent  = (v) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(v);
+const fmt  = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+const fmtP = (v) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(v);
+const n2   = (v) => v.toFixed(2).replace('.', ',');
 
-// ─── RENDER COMPLETO (só chamado quando a estrutura da tabela muda) ───────────
+// ── TOOLTIP HTML HELPER ───────────────────────────────────────────────────────
+function tip(label, description, formula) {
+    return `
+        <span class="tooltip-wrap">
+            <span>${label}</span>
+            <span class="tooltip-icon">?</span>
+            <span class="tooltip-box">
+                ${description}
+                ${formula ? `<span class="tip-formula">${formula}</span>` : ''}
+            </span>
+        </span>`;
+}
+
+// ── BREAKDOWN HTML HELPER ─────────────────────────────────────────────────────
+function bdLine(label, value, formula, isTotal) {
+    return `<div class="breakdown-line ${isTotal ? 'total' : ''}">
+        <span>${label}</span>
+        <span>${value}${formula ? `<br><span class="formula">${formula}</span>` : ''}</span>
+    </div>`;
+}
+
+// ── RENDER COMPLETO ───────────────────────────────────────────────────────────
 function render() {
     if (!state.global_params) return;
-
     document.getElementById('param-whisper-rate').value = state.global_params.whisper_rate;
     document.getElementById('param-gamma-rate').value   = state.global_params.gamma_rate;
     document.getElementById('param-tax-rate').value     = state.global_params.tax_rate;
     document.getElementById('param-stripe-pct').value   = state.global_params.stripe_pct;
     document.getElementById('param-stripe-fixed').value = state.global_params.stripe_fixed;
-
-    document.getElementById('inp-users').value    = state.total_users;
-    document.getElementById('label-users').textContent = state.total_users;
-
-    for (const planKey in state.plans_config) {
-        const plan = state.plans_config[planKey];
-        document.getElementById(`pct-${planKey}`).value             = plan.pct;
-        document.getElementById(`label-pct-${planKey}`).textContent = `${plan.pct}%`;
-        document.getElementById(`price-${planKey}`).value           = plan.price;
-        document.getElementById(`hours-${planKey}`).value           = plan.hours;
-        document.getElementById(`slides-${planKey}`).value          = plan.slides;
+    document.getElementById('inp-users').value          = state.total_users;
+    document.getElementById('label-users').textContent  = state.total_users;
+    for (const k in state.plans_config) {
+        const p = state.plans_config[k];
+        document.getElementById(`pct-${k}`).value             = p.pct;
+        document.getElementById(`label-pct-${k}`).textContent = `${p.pct}%`;
+        document.getElementById(`price-${k}`).value           = p.price;
+        document.getElementById(`hours-${k}`).value           = p.hours;
+        document.getElementById(`slides-${k}`).value          = p.slides;
     }
-
     document.getElementById('btn-monthly').classList.toggle('active', state.current_view === 'monthly');
     document.getElementById('btn-yearly').classList.toggle('active',  state.current_view === 'yearly');
-
     renderFixedCosts();
     renderVariableCosts();
     calculateAndRenderDashboard();
@@ -238,13 +310,24 @@ function render() {
 function renderFixedCosts() {
     const tbody = document.querySelector('#table-fixed-costs tbody');
     tbody.innerHTML = '';
-    state.fixed_costs.forEach((cost, index) => {
+    state.fixed_costs.forEach((cost, i) => {
         const tr = document.createElement('tr');
+        const tipText = cost.isPerUser
+            ? `Custo por aquisição de cliente (CAC), cobrado uma vez por usuário novo. Multiplica pelo total de usuários ativos.`
+            : `Custo fixo mensal — não varia com o número de usuários.`;
+        const formula = cost.isPerUser
+            ? `R$${n2(cost.value)} × ${state.total_users} usuários = ${fmt(cost.value * state.total_users)}`
+            : `Valor fixo: ${fmt(cost.value)}/mês`;
         tr.innerHTML = `
-            <td><input type="text" value="${cost.name}" data-index="${index}" data-field="name"></td>
-            <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-index="${index}" data-field="value" style="width:120px;"></td>
-            <td class="right"><button class="action-btn" data-index="${index}">🗑</button></td>
-        `;
+            <td>
+                <span class="tooltip-wrap">
+                    <input type="text" value="${cost.name}" data-index="${i}" data-field="name" style="border:1px solid var(--gray-light);border-radius:4px;padding:4px;font-family:monospace;width:100%;">
+                    <span class="tooltip-icon">?</span>
+                    <span class="tooltip-box">${tipText}<span class="tip-formula">${formula}</span></span>
+                </span>
+            </td>
+            <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-index="${i}" data-field="value" style="width:120px;"></td>
+            <td class="right"><button class="action-btn" data-index="${i}">🗑</button></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -254,108 +337,174 @@ function renderVariableCosts() {
     container.innerHTML = '';
     for (const planKey in state.plans_config) {
         const plan = state.plans_config[planKey];
-        const section = document.createElement('div');
-        section.className = 'table-section';
+        const gp   = state.global_params;
+        const whisperCost = plan.hours * gp.whisper_rate;
+        const gammaCost   = plan.slides * gp.gamma_rate;
+        const stripeCost  = (plan.price * (gp.stripe_pct / 100)) + gp.stripe_fixed;
 
         let tableRows = '';
-        state.variable_costs[planKey].forEach((cost, index) => {
+        state.variable_costs[planKey].forEach((cost, i) => {
             tableRows += `
                 <tr>
-                    <td><input type="text" value="${cost.name}" data-plan="${planKey}" data-index="${index}" data-field="name"></td>
-                    <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-plan="${planKey}" data-index="${index}" data-field="value" style="width:120px;"></td>
-                    <td class="right"><button class="action-btn" data-plan="${planKey}" data-index="${index}">🗑</button></td>
-                </tr>
-            `;
+                    <td><span class="tooltip-wrap">
+                        <input type="text" value="${cost.name}" data-plan="${planKey}" data-index="${i}" data-field="name" style="border:1px solid var(--gray-light);border-radius:4px;padding:4px;font-family:monospace;width:100%;">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-box">Custo variável por usuário/mês do plano ${plan.name}. Você pode renomear e ajustar o valor.<span class="tip-formula">Valor fixo por usuário: R$${n2(cost.value)}</span></span>
+                    </span></td>
+                    <td class="right"><input type="number" step="0.01" class="input-box" value="${cost.value}" data-plan="${planKey}" data-index="${i}" data-field="value" style="width:120px;"></td>
+                    <td class="right"><button class="action-btn" data-plan="${planKey}" data-index="${i}">🗑</button></td>
+                </tr>`;
         });
 
+        const whisperTip = `Custo de transcrição de áudio via Groq Whisper. Calculado pelo tempo de gravação do plano multiplicado pelo custo por hora da API.<span class="tip-formula">${plan.hours}h × R$${n2(gp.whisper_rate)}/h = ${fmt(whisperCost)}</span>`;
+        const gammaTip   = `Custo de geração de slides via Gamma API. Calculado pelo número de slides do plano vezes o custo por slide.<span class="tip-formula">${plan.slides} slides × R$${n2(gp.gamma_rate)}/slide = ${fmt(gammaCost)}</span>`;
+        const stripeTip  = `Taxa de processamento de pagamento cobrada pelo Stripe. Composta de uma % sobre o valor da assinatura mais uma taxa fixa por transação.<span class="tip-formula">(R$${plan.price} × ${gp.stripe_pct}%) + R$${n2(gp.stripe_fixed)} = ${fmt(stripeCost)}</span>`;
+
+        const section = document.createElement('div');
+        section.className = 'table-section';
         section.innerHTML = `
             <div class="section-title">📦 Custos Variáveis - ${plan.name}</div>
             <table class="crud-table">
-                <thead><tr><th>Item</th><th class="right">Valor Base (R$)</th><th class="right">Ações</th></tr></thead>
+                <thead><tr><th>Item</th><th class="right">Valor Base (R$) / usuário</th><th class="right">Ações</th></tr></thead>
                 <tbody>
-                    <tr><td>Groq Whisper</td><td class="right" id="vc-whisper-${planKey}">R$ 0.00</td><td></td></tr>
-                    <tr><td>Gamma API</td><td class="right" id="vc-gamma-${planKey}">R$ 0.00</td><td></td></tr>
+                    <tr>
+                        <td><span class="tooltip-wrap"><span>Groq Whisper</span><span class="tooltip-icon">?</span><span class="tooltip-box">${whisperTip}</span></span></td>
+                        <td class="right" id="vc-whisper-${planKey}">R$ 0,00</td><td></td>
+                    </tr>
+                    <tr>
+                        <td><span class="tooltip-wrap"><span>Gamma API</span><span class="tooltip-icon">?</span><span class="tooltip-box">${gammaTip}</span></span></td>
+                        <td class="right" id="vc-gamma-${planKey}">R$ 0,00</td><td></td>
+                    </tr>
                     ${tableRows}
-                    <tr style="font-style: italic;"><td>Taxa de Transação (Stripe)</td><td class="right" id="vc-stripe-${planKey}">R$ 0.00</td><td></td></tr>
+                    <tr style="font-style:italic;">
+                        <td><span class="tooltip-wrap"><span>Taxa de Transação (Stripe)</span><span class="tooltip-icon">?</span><span class="tooltip-box">${stripeTip}</span></span></td>
+                        <td class="right" id="vc-stripe-${planKey}">R$ 0,00</td><td></td>
+                    </tr>
                 </tbody>
             </table>
-            <button class="btn btn-outline btn-add-variable-cost" data-plan="${planKey}" style="margin-top: 1rem;">+ Adicionar Custo Variável</button>
-        `;
+            <button class="btn btn-outline btn-add-variable-cost" data-plan="${planKey}" style="margin-top:1rem;">+ Adicionar Custo Variável</button>`;
         container.appendChild(section);
     }
 }
 
-// ─── CÁLCULO + DASHBOARD (chamado a cada input, sem reconstruir DOM) ──────────
+// ── CÁLCULO + DASHBOARD ───────────────────────────────────────────────────────
 function calculateAndRenderDashboard() {
-    const multiplier = state.current_view === 'yearly' ? 12 : 1;
-    let totalRevenue = 0;
-    let totalVariableCost = 0;
+    const mult = state.current_view === 'yearly' ? 12 : 1;
+    const gp   = state.global_params;
+    let totalRevenue = 0, totalVariableCost = 0;
 
-    const totalFixedCostValue = state.fixed_costs.reduce((acc, cost) => {
-        return acc + (cost.isPerUser ? cost.value * state.total_users : cost.value);
-    }, 0) * multiplier;
+    // Custos fixos
+    const totalFixedCostValue = state.fixed_costs.reduce((acc, c) =>
+        acc + (c.isPerUser ? c.value * state.total_users : c.value), 0) * mult;
 
-    for (const planKey in state.plans_config) {
-        const plan = state.plans_config[planKey];
-        const usersInPlan = state.total_users * (plan.pct / 100);
-
-        let planPrice = plan.price;
+    // Por plano
+    const planDetails = {};
+    for (const k in state.plans_config) {
+        const p           = state.plans_config[k];
+        const users       = state.total_users * (p.pct / 100);
+        let planPrice     = p.price;
         if (state.current_view === 'yearly') planPrice *= 12 * 0.90;
-        totalRevenue += usersInPlan * planPrice;
+        const revenue     = users * planPrice;
+        totalRevenue     += revenue;
 
-        const whisperCost = plan.hours * state.global_params.whisper_rate;
-        const gammaCost   = plan.slides * state.global_params.gamma_rate;
-        const stripeCost  = (plan.price * (state.global_params.stripe_pct / 100)) + state.global_params.stripe_fixed;
-        const otherCosts  = state.variable_costs[planKey].reduce((acc, c) => acc + c.value, 0);
-        const costPerUser = whisperCost + gammaCost + stripeCost + otherCosts;
+        const whisper    = p.hours  * gp.whisper_rate;
+        const gamma      = p.slides * gp.gamma_rate;
+        const stripe     = (p.price * (gp.stripe_pct / 100)) + gp.stripe_fixed;
+        const other      = state.variable_costs[k].reduce((a, c) => a + c.value, 0);
+        const costPerUser = whisper + gamma + stripe + other;
+        const totalVar   = costPerUser * users * mult;
+        totalVariableCost += totalVar;
 
-        totalVariableCost += costPerUser * usersInPlan * multiplier;
+        planDetails[k] = { users, revenue, whisper, gamma, stripe, other, costPerUser, totalVar, planPrice };
 
-        // Atualiza apenas as células calculadas (não reconstrói o DOM)
-        const elW = document.getElementById(`vc-whisper-${planKey}`);
-        const elG = document.getElementById(`vc-gamma-${planKey}`);
-        const elS = document.getElementById(`vc-stripe-${planKey}`);
-        if (elW) elW.textContent = fmtCurrency(whisperCost);
-        if (elG) elG.textContent = fmtCurrency(gammaCost);
-        if (elS) elS.textContent = fmtCurrency(stripeCost);
+        const elW = document.getElementById(`vc-whisper-${k}`);
+        const elG = document.getElementById(`vc-gamma-${k}`);
+        const elS = document.getElementById(`vc-stripe-${k}`);
+        if (elW) elW.textContent = fmt(whisper);
+        if (elG) elG.textContent = fmt(gamma);
+        if (elS) elS.textContent = fmt(stripe);
     }
 
-    const taxCost           = totalRevenue * (state.global_params.tax_rate / 100);
+    const taxCost           = totalRevenue * (gp.tax_rate / 100);
     const totalCosts        = totalVariableCost + totalFixedCostValue + taxCost;
-    const netResult         = totalRevenue - totalCosts;
     const profitBeforeFixed = totalRevenue - totalVariableCost - taxCost;
+    const netResult         = totalRevenue - totalCosts;
+    const suffix            = state.current_view === 'yearly' ? '/ano' : '/mês';
 
-    document.getElementById('val-receita').textContent       = fmtCurrency(totalRevenue);
+    // Atualiza valores dos cards
+    document.getElementById('val-receita').textContent     = fmt(totalRevenue);
     document.getElementById('sub-receita-detalhe').textContent =
-        `${(state.total_users * (state.plans_config.starter.pct  / 100)).toFixed(0)}S | ` +
-        `${(state.total_users * (state.plans_config.pro.pct       / 100)).toFixed(0)}P | ` +
-        `${(state.total_users * (state.plans_config.business.pct  / 100)).toFixed(0)}B`;
-    document.getElementById('val-custos').textContent        = fmtCurrency(totalCosts);
-    document.getElementById('val-lucro-bruto').textContent   = fmtCurrency(profitBeforeFixed);
-    document.getElementById('sub-margem').textContent        = `Margem: ${totalRevenue > 0 ? fmtPercent(profitBeforeFixed / totalRevenue) : '0.0%'}`;
-    document.getElementById('val-liquido').textContent       = fmtCurrency(netResult);
+        `${(state.total_users*(state.plans_config.starter.pct/100)).toFixed(0)}S | `+
+        `${(state.total_users*(state.plans_config.pro.pct/100)).toFixed(0)}P | `+
+        `${(state.total_users*(state.plans_config.business.pct/100)).toFixed(0)}B`;
+    document.getElementById('val-custos').textContent      = fmt(totalCosts);
+    document.getElementById('val-lucro-bruto').textContent = fmt(profitBeforeFixed);
+    document.getElementById('sub-margem').textContent      = `Margem: ${totalRevenue > 0 ? fmtP(profitBeforeFixed/totalRevenue) : '0,0%'}`;
+    document.getElementById('val-liquido').textContent     = fmt(netResult);
 
-    document.getElementById('tb-receita').textContent        = fmtCurrency(totalRevenue);
-    document.getElementById('tb-api').textContent            = fmtCurrency(totalVariableCost);
-    document.getElementById('tb-api-pct').textContent        = totalRevenue > 0 ? fmtPercent(totalVariableCost / totalRevenue) : '0.0%';
-    document.getElementById('tb-fixo').textContent           = fmtCurrency(totalFixedCostValue);
-    document.getElementById('tb-fixo-pct').textContent       = totalRevenue > 0 ? fmtPercent(totalFixedCostValue / totalRevenue) : '0.0%';
-    document.getElementById('tb-impostos').textContent       = fmtCurrency(taxCost);
-    document.getElementById('tb-impostos-pct').textContent   = totalRevenue > 0 ? fmtPercent(taxCost / totalRevenue) : '0.0%';
-    document.getElementById('tb-liquido').textContent        = fmtCurrency(netResult);
-    document.getElementById('tb-liquido-pct').textContent    = totalRevenue > 0 ? fmtPercent(netResult / totalRevenue) : '0.0%';
+    // Resumo financeiro
+    document.getElementById('tb-receita').textContent      = fmt(totalRevenue);
+    document.getElementById('tb-api').textContent          = fmt(totalVariableCost);
+    document.getElementById('tb-api-pct').textContent      = totalRevenue > 0 ? fmtP(totalVariableCost/totalRevenue) : '0%';
+    document.getElementById('tb-fixo').textContent         = fmt(totalFixedCostValue);
+    document.getElementById('tb-fixo-pct').textContent     = totalRevenue > 0 ? fmtP(totalFixedCostValue/totalRevenue) : '0%';
+    document.getElementById('tb-impostos').textContent     = fmt(taxCost);
+    document.getElementById('tb-impostos-pct').textContent = totalRevenue > 0 ? fmtP(taxCost/totalRevenue) : '0%';
+    document.getElementById('tb-liquido').textContent      = fmt(netResult);
+    document.getElementById('tb-liquido-pct').textContent  = totalRevenue > 0 ? fmtP(netResult/totalRevenue) : '0%';
+
+    // ── BREAKDOWNS ────────────────────────────────────────────────────────────
+    const discountNote = state.current_view === 'yearly' ? ' (10% desc. anual)' : '';
+
+    // Receita
+    let bdR = '';
+    for (const k in planDetails) {
+        const d = planDetails[k];
+        const p = state.plans_config[k];
+        bdR += bdLine(
+            `Plano ${p.name} (${d.users.toFixed(1)} usuários)`,
+            fmt(d.revenue),
+            `${d.users.toFixed(1)} × ${fmt(d.planPrice)}${discountNote}`
+        );
+    }
+    bdR += bdLine('Total Receita Bruta', fmt(totalRevenue), null, true);
+    document.getElementById('bd-receita').innerHTML = bdR;
+
+    // Custos totais
+    let bdC = '';
+    bdC += bdLine('Custos Variáveis', fmt(totalVariableCost), `todas as APIs × usuários${suffix}`);
+    bdC += bdLine('Custos Fixos', fmt(totalFixedCostValue), `despesas operacionais${suffix}`);
+    bdC += bdLine(`Impostos (${gp.tax_rate}%)`, fmt(taxCost), `${fmt(totalRevenue)} × ${gp.tax_rate}%`);
+    bdC += bdLine('Total Custos', fmt(totalCosts), null, true);
+    document.getElementById('bd-custos').innerHTML = bdC;
+
+    // Lucro bruto (antes dos fixos)
+    let bdL = '';
+    bdL += bdLine('Receita Bruta', fmt(totalRevenue));
+    bdL += bdLine('(-) Custos Variáveis', fmt(totalVariableCost), `APIs + Stripe por usuário${suffix}`);
+    bdL += bdLine(`(-) Impostos (${gp.tax_rate}%)`, fmt(taxCost));
+    bdL += bdLine('= Lucro Bruto', fmt(profitBeforeFixed), 'Receita − Var − Impostos (sem fixos)', true);
+    bdL += `<div style="margin-top:6px;font-size:11px;color:var(--gray);">⚠️ Não inclui custos fixos (pró-labore, infra, etc). Mostra quanto sobra de cada R$1 de receita antes das despesas operacionais.</div>`;
+    document.getElementById('bd-lucro').innerHTML = bdL;
+
+    // Resultado líquido
+    let bdN = '';
+    bdN += bdLine('Lucro Bruto', fmt(profitBeforeFixed));
+    bdN += bdLine('(-) Custos Fixos', fmt(totalFixedCostValue));
+    bdN += bdLine('= Resultado Líquido', fmt(netResult), 'Lucro Bruto − Custos Fixos', true);
+    bdN += `<div style="margin-top:6px;font-size:11px;color:var(--gray);">💡 Este é o valor que de fato sobra para a empresa (ou prejuízo, se negativo).</div>`;
+    document.getElementById('bd-liquido').innerHTML = bdN;
 }
 
-// ─── SUPABASE ─────────────────────────────────────────────────────────────────
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
 async function loadScenarios() {
     const { data, error } = await supabaseClient.from('calculator_scenarios').select('id, name');
-    if (error) { console.error('Erro ao carregar cenários:', error); return; }
+    if (error) { console.error('Erro:', error); return; }
     const select = document.getElementById('scenario-select');
     select.innerHTML = '<option value="">Selecione um cenário...</option>';
     data.forEach(s => {
         const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = s.name;
+        opt.value = s.id; opt.textContent = s.name;
         select.appendChild(opt);
     });
 }
@@ -364,111 +513,69 @@ async function handleLoadScenario() {
     const id = document.getElementById('scenario-select').value;
     if (!id) return;
     const { data, error } = await supabaseClient.from('calculator_scenarios').select('*').eq('id', id).single();
-    if (error) { alert('Erro ao carregar o cenário selecionado.'); return; }
-
-    state.id             = data.id;
-    state.name           = data.name;
-    state.total_users    = data.total_users;
-    state.global_params  = data.global_params;
-    state.plans_config   = data.plans_config;
-    state.fixed_costs    = data.fixed_costs;
-    state.variable_costs = data.variable_costs;
-    state.current_view   = 'monthly';
-
+    if (error) { alert('Erro ao carregar cenário.'); return; }
+    state.id = data.id; state.name = data.name; state.total_users = data.total_users;
+    state.global_params = data.global_params; state.plans_config = data.plans_config;
+    state.fixed_costs = data.fixed_costs; state.variable_costs = data.variable_costs;
+    state.current_view = 'monthly';
     document.getElementById('inp-scenario-name').value = data.name;
     render();
 }
 
 async function handleSaveScenario() {
     const name = document.getElementById('inp-scenario-name').value;
-    if (!name) { alert('Por favor, dê um nome ao cenário.'); return; }
-
-    const scenarioData = {
-        name,
-        total_users:    state.total_users,
-        global_params:  state.global_params,
-        plans_config:   state.plans_config,
-        fixed_costs:    state.fixed_costs,
-        variable_costs: state.variable_costs
-    };
-
-    let response;
+    if (!name) { alert('Dê um nome ao cenário.'); return; }
+    const data = { name, total_users: state.total_users, global_params: state.global_params,
+        plans_config: state.plans_config, fixed_costs: state.fixed_costs, variable_costs: state.variable_costs };
+    let resp;
     if (state.id && document.getElementById('scenario-select').value === state.id) {
-        response = await supabaseClient.from('calculator_scenarios').update(scenarioData).eq('id', state.id);
+        resp = await supabaseClient.from('calculator_scenarios').update(data).eq('id', state.id);
     } else {
-        response = await supabaseClient.from('calculator_scenarios').insert([scenarioData]).select();
+        resp = await supabaseClient.from('calculator_scenarios').insert([data]).select();
     }
-
-    if (response.error) {
-        alert('Erro ao salvar o cenário: ' + response.error.message);
-    } else {
-        alert('Cenário salvo com sucesso!');
-        if (response.data && response.data.length > 0) state.id = response.data[0].id;
-        loadScenarios();
-    }
+    if (resp.error) { alert('Erro: ' + resp.error.message); }
+    else { alert('Salvo!'); if (resp.data?.[0]) state.id = resp.data[0].id; loadScenarios(); }
 }
 
 function copyToClipboard() {
     const view = state.current_view === 'monthly' ? 'MENSAL' : 'ANUAL';
     const name = document.getElementById('inp-scenario-name').value || 'Cenário Atual';
-    const text = `
-📊 RESUMO RECAPY - VISÃO ${view} | Cenário: ${name} 📊
-Usuários Ativos: ${state.total_users}
-Receita Bruta: ${document.getElementById('val-receita').textContent}
-Custos Totais: ${document.getElementById('val-custos').textContent}
-Resultado Líquido: ${document.getElementById('val-liquido').textContent}
-    `.trim();
-    navigator.clipboard.writeText(text).then(() => alert('Resumo copiado!'));
+    const text = `📊 RESUMO RECAPY - VISÃO ${view} | ${name}\nUsuários: ${state.total_users}\nReceita: ${document.getElementById('val-receita').textContent}\nCustos: ${document.getElementById('val-custos').textContent}\nLíquido: ${document.getElementById('val-liquido').textContent}`.trim();
+    navigator.clipboard.writeText(text).then(() => alert('Copiado!'));
 }
 
-// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
+// ── EVENT LISTENERS ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     state = createDefaultState();
     loadScenarios();
     render();
 
-    // INPUT: atualiza state e recalcula o dashboard — NÃO reconstrói o DOM
+    // Inputs — só recalcula dashboard, não reconstrói DOM
     document.body.addEventListener('input', (e) => {
-        const id    = e.target.id;
-        const value = (e.target.type === 'range' || e.target.type === 'number')
-            ? parseFloat(e.target.value) || 0
-            : e.target.value;
+        const id  = e.target.id;
+        const val = (e.target.type === 'range' || e.target.type === 'number')
+            ? parseFloat(e.target.value) || 0 : e.target.value;
 
-        if (id === 'inp-users') {
-            state.total_users = value;
-            document.getElementById('label-users').textContent = value;
-        }
-        if (id.startsWith('pct-')) {
-            const planKey = id.replace('pct-', '');
-            state.plans_config[planKey].pct = value;
-            document.getElementById(`label-pct-${planKey}`).textContent = `${value}%`;
-        }
-        if (id.startsWith('param-')) {
-            const paramKey = id.replace('param-', '').replace(/-/g, '_');
-            state.global_params[paramKey] = value;
-        }
+        if (id === 'inp-users') { state.total_users = val; document.getElementById('label-users').textContent = val; }
+        if (id.startsWith('pct-')) { const k = id.replace('pct-',''); state.plans_config[k].pct = val; document.getElementById(`label-pct-${k}`).textContent = `${val}%`; }
+        if (id.startsWith('param-')) { state.global_params[id.replace('param-','').replace(/-/g,'_')] = val; }
         if (id.startsWith('price-') || id.startsWith('hours-') || id.startsWith('slides-')) {
-            const [field, planKey] = id.split('-');
-            state.plans_config[planKey][field] = value;
+            const [f, k] = id.split('-'); state.plans_config[k][f] = val;
         }
         if (e.target.dataset.index !== undefined) {
             const { index, field, plan } = e.target.dataset;
-            if (plan) {
-                state.variable_costs[plan][index][field] = field === 'name' ? value : parseFloat(value) || 0;
-            } else {
-                state.fixed_costs[index][field] = field === 'name' ? value : parseFloat(value) || 0;
-            }
+            const v = field === 'name' ? val : parseFloat(val) || 0;
+            if (plan) state.variable_costs[plan][index][field] = v;
+            else      state.fixed_costs[index][field] = v;
         }
-
-        // Recalcula apenas o dashboard — sem reconstruir as tabelas CRUD
         calculateAndRenderDashboard();
     });
 
-    // CLICK: apenas ações que realmente precisam reconstruir o DOM chamam render()
+    // Cliques
     document.body.addEventListener('click', (e) => {
         const id = e.target.id;
 
-        // Toggle mensal/anual
+        // Toggle view
         if (id === 'btn-monthly') {
             state.current_view = 'monthly';
             document.getElementById('btn-monthly').classList.add('active');
@@ -486,31 +593,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id === 'btn-load') handleLoadScenario();
         if (id === 'btn-save') handleSaveScenario();
 
-        // CRUD Add — precisa de render() para adicionar nova linha
-        if (id === 'btn-add-fixed-cost') {
-            state.fixed_costs.push({ name: 'Novo Custo', value: 0 });
-            render();
-        }
-        if (e.target.classList.contains('btn-add-variable-cost')) {
-            const plan = e.target.dataset.plan;
-            state.variable_costs[plan].push({ name: 'Novo Custo Var.', value: 0 });
-            render();
-        }
-
-        // CRUD Delete — precisa de render() para remover a linha
-        if (e.target.classList.contains('action-btn')) {
-            const { index, plan } = e.target.dataset;
-            if (confirm('Tem certeza que deseja excluir este item?')) {
-                if (plan) {
-                    state.variable_costs[plan].splice(parseInt(index), 1);
-                } else {
-                    state.fixed_costs.splice(parseInt(index), 1);
-                }
-                render();
+        // Breakdown toggle
+        if (e.target.classList.contains('btn-breakdown')) {
+            const targetId = e.target.dataset.target;
+            const panel = document.getElementById(targetId);
+            if (panel) {
+                panel.classList.toggle('open');
+                e.target.textContent = panel.classList.contains('open') ? '▴' : '▾';
             }
         }
 
-        // ← SEM render() genérico aqui. Essa era a causa do bug.
+        // CRUD Add
+        if (id === 'btn-add-fixed-cost') { state.fixed_costs.push({ name: 'Novo Custo', value: 0 }); render(); }
+        if (e.target.classList.contains('btn-add-variable-cost')) {
+            state.variable_costs[e.target.dataset.plan].push({ name: 'Novo Custo Var.', value: 0 }); render();
+        }
+
+        // CRUD Delete
+        if (e.target.classList.contains('action-btn')) {
+            const { index, plan } = e.target.dataset;
+            if (confirm('Excluir este item?')) {
+                if (plan) state.variable_costs[plan].splice(parseInt(index), 1);
+                else      state.fixed_costs.splice(parseInt(index), 1);
+                render();
+            }
+        }
     });
 });
 </script>
